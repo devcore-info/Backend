@@ -39,30 +39,31 @@ All endpoints consume and produce purely **JSON** (`application/json`). In Jakar
 
 ---
 
-## 🗄️ Database Schema (SQL Server)
+## 🗄️ Database Schema (MySQL / MariaDB for XAMPP)
 
-Run the following SQL script to initialize the relational database tables:
+Run the following SQL script in phpMyAdmin or your MySQL client in XAMPP to initialize the relational database tables:
 
 ```sql
 -- Create Database
-CREATE DATABASE ConnextionDB;
-GO
+CREATE DATABASE IF NOT EXISTS ConnextionDB;
 USE ConnextionDB;
-GO
 
 -- 1. Services Table
 CREATE TABLE Services (
-    id INT IDENTITY(1,1) PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE
 );
 
 -- Populate required services
 INSERT INTO Services (name) VALUES 
-('Telefonía móvil'), ('Cable'), ('Internet'), ('Telefonía fija');
+('Telefonía móvil'), 
+('Cable'), 
+('Internet'), 
+('Telefonía fija');
 
 -- 2. Clients Table
 CREATE TABLE Clients (
-    id INT IDENTITY(1,1) PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     first_surname VARCHAR(50) NOT NULL,
     second_surname VARCHAR(50) NOT NULL,
@@ -75,27 +76,31 @@ CREATE TABLE Clients (
 
 -- 3. Client_Services Table (Many-to-Many Relation)
 CREATE TABLE Client_Services (
-    client_id INT FOREIGN KEY REFERENCES Clients(id),
-    service_id INT FOREIGN KEY REFERENCES Services(id),
-    PRIMARY KEY (client_id, service_id)
+    client_id INT NOT NULL,
+    service_id INT NOT NULL,
+    PRIMARY KEY (client_id, service_id),
+    FOREIGN KEY (client_id) REFERENCES Clients(id) ON DELETE CASCADE,
+    FOREIGN KEY (service_id) REFERENCES Services(id) ON DELETE CASCADE
 );
 
 -- 4. Support_Users Table (Supporters and Supervisors)
 CREATE TABLE Support_Users (
-    id INT IDENTITY(1,1) PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     first_surname VARCHAR(50) NOT NULL,
     second_surname VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    is_supervisor BIT NOT NULL DEFAULT 0
+    is_supervisor BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- 5. Support_User_Services Table (Many-to-Many Relation)
 CREATE TABLE Support_User_Services (
-    support_user_id INT FOREIGN KEY REFERENCES Support_Users(id),
-    service_id INT FOREIGN KEY REFERENCES Services(id),
-    PRIMARY KEY (support_user_id, service_id)
+    support_user_id INT NOT NULL,
+    service_id INT NOT NULL,
+    PRIMARY KEY (support_user_id, service_id),
+    FOREIGN KEY (support_user_id) REFERENCES Support_Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (service_id) REFERENCES Services(id) ON DELETE CASCADE
 );
 ```
 

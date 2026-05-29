@@ -1,14 +1,18 @@
 package com.connextion.helpdesk.controllers;
 
 import com.connextion.helpdesk.models.Client;
+import com.connextion.helpdesk.repositories.ClientRepository;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
 @Path("/api/v1/clients")
 public class ClientController {
+
+    private final ClientRepository clientRepository = new ClientRepository();
 
     // CU1: Register Client User
     @POST
@@ -27,10 +31,19 @@ public class ClientController {
             return Response.status(Response.Status.BAD_REQUEST).entity(response).build();
         }
 
-        // TODO: Call Service layer to insert client and client_services into SQL Server
-        
-        response.put("message", "Client registered successfully");
-        return Response.status(Response.Status.CREATED).entity(response).build();
+        try {
+            boolean success = clientRepository.register(client);
+            if (success) {
+                response.put("message", "Client registered successfully");
+                return Response.status(Response.Status.CREATED).entity(response).build();
+            } else {
+                response.put("error", "Failed to register client");
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(response).build();
+            }
+        } catch (SQLException e) {
+            response.put("error", "Database error: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(response).build();
+        }
     }
 
     // CU2: Client Login
@@ -54,15 +67,21 @@ public class ClientController {
             return Response.status(Response.Status.BAD_REQUEST).entity(response).build();
         }
 
-        // TODO: Database lookup and validation
-        // Mock authentication validation for testing
-        if ("client@connection.com".equals(email) && "password123".equals(password)) {
-            response.put("message", "Authentication successful");
-            response.put("email", email);
-            return Response.ok(response).build();
+        try {
+            Client authenticatedClient = clientRepository.login(email, password);
+            if (authenticatedClient != null) {
+                response.put("message", "Authentication successful");
+                response.put("email", authenticatedClient.getEmail());
+                response.put("clientId", authenticatedClient.getId());
+                response.put("name", authenticatedClient.getName());
+                return Response.ok(response).build();
+            } else {
+                response.put("error", "Invalid email or password");
+                return Response.status(Response.Status.UNAUTHORIZED).entity(response).build();
+            }
+        } catch (SQLException e) {
+            response.put("error", "Database error: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(response).build();
         }
-
-        response.put("error", "Invalid email or password");
-        return Response.status(Response.Status.UNAUTHORIZED).entity(response).build();
     }
 }

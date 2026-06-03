@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - Connextion Helpdesk</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container" style="max-width: 680px;">
+        <div class="dashboard-header">
+            <div>
+                <h1 style="text-align: left; font-size: 1.6rem;" id="welcomeTitle">Bienvenido, Usuario</h1>
+                <p id="userEmailDisplay" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">usuario@connextion.com</p>
+            </div>
+            <span id="roleBadge" class="role-badge">Rol</span>
+        </div>
+
+        <!-- Dynamic Content Section -->
+        <div id="dashboardContent">
+            <!-- Loading state -->
+            <p style="text-align: center; color: var(--text-secondary);">Cargando panel...</p>
+        </div>
+
+        <!-- Supervisor View Template (Hidden by default, injected dynamically) -->
+        <template id="supervisorTemplate">
+            <div>
+                <h2 style="font-size: 1.2rem; font-weight: 600; margin-bottom: 15px; color: var(--text-primary);">Métricas Globales de Soporte</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">24</div>
+                        <div class="stat-label">Casos Activos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">98.2%</div>
+                        <div class="stat-label">SLA Cumplido</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">4</div>
+                        <div class="stat-label">Técnicos Activos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">8 mins</div>
+                        <div class="stat-label">Tiempo Res. Prom.</div>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Monitoreo de Actividad Reciente</h3>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div>
+                            <span class="activity-title">Fallo en red de Cable (ID #3421)</span>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Asignado a: Carlos M.</div>
+                        </div>
+                        <span class="activity-status" style="color: var(--warning);">En Progreso</span>
+                    </div>
+                    <div class="activity-item">
+                        <div>
+                            <span class="activity-title">Activación Internet Fibra (ID #3422)</span>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Asignado a: Sofía R.</div>
+                        </div>
+                        <span class="activity-status" style="color: var(--success);">Completado</span>
+                    </div>
+                    <div class="activity-item">
+                        <div>
+                            <span class="activity-title">Problema de Facturación Móvil (ID #3423)</span>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Asignado a: Manuel G.</div>
+                        </div>
+                        <span class="activity-status" style="color: var(--error);">Pendiente</span>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Technician View Template (Hidden by default, injected dynamically) -->
+        <template id="technicianTemplate">
+            <div>
+                <h2 style="font-size: 1.2rem; font-weight: 600; margin-bottom: 15px; color: var(--text-primary);">Mis Tareas Pendientes</h2>
+                <div class="stats-grid">
+                    <div class="stat-card" style="grid-column: span 2;">
+                        <div class="stat-number" style="color: var(--accent-color);">5</div>
+                        <div class="stat-label">Tickets Asignados a Mí</div>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Cola de Atención</h3>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div>
+                            <span class="activity-title">Configuración Router Residencial</span>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Área: Internet • Urgencia: Alta</div>
+                        </div>
+                        <button class="btn" style="width: auto; padding: 6px 12px; margin: 0; font-size: 0.8rem;">Resolver</button>
+                    </div>
+                    <div class="activity-item">
+                        <div>
+                            <span class="activity-title">Interrupción de Señal Cable TV</span>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Área: Cable • Urgencia: Media</div>
+                        </div>
+                        <button class="btn" style="width: auto; padding: 6px 12px; margin: 0; font-size: 0.8rem;">Resolver</button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <button id="logoutBtn" class="btn" style="background: transparent; border: 1px solid var(--glass-border); color: var(--text-secondary); margin-top: 25px;">
+            Cerrar Sesión Administrativa
+        </button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Retrieve session values from localStorage
+            const userEmail = localStorage.getItem('userEmail');
+            const isSupervisorStr = localStorage.getItem('isSupervisor');
+
+            // Route guard: Redirect if user is not authenticated
+            if (!userEmail) {
+                window.location.href = 'support-login.html';
+                return;
+            }
+
+            const isSupervisor = isSupervisorStr === 'true';
+
+            // Set basic profile details
+            document.getElementById('userEmailDisplay').innerText = userEmail;
+            
+            // Extract a user name friendly presentation from the email
+            const namePart = userEmail.split('@')[0];
+            const cleanName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+            document.getElementById('welcomeTitle').innerText = `Hola, ${cleanName}`;
+
+            const roleBadge = document.getElementById('roleBadge');
+            const dashboardContent = document.getElementById('dashboardContent');
+
+            // Render view depending on the role
+            if (isSupervisor) {
+                // Configure Supervisor Layout
+                roleBadge.innerText = 'Supervisor';
+                roleBadge.className = 'role-badge badge-supervisor';
+                
+                const template = document.getElementById('supervisorTemplate');
+                const clone = document.importNode(template.content, true);
+                dashboardContent.innerHTML = '';
+                dashboardContent.appendChild(clone);
+            } else {
+                // Configure Technician Layout
+                roleBadge.innerText = 'Técnico';
+                roleBadge.className = 'role-badge badge-tech';
+                
+                const template = document.getElementById('technicianTemplate');
+                const clone = document.importNode(template.content, true);
+                dashboardContent.innerHTML = '';
+                dashboardContent.appendChild(clone);
+            }
+        });
+
+        // Logout action handler
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            // Clear session values
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('isSupervisor');
+            
+            // Redirect back to login
+            window.location.href = 'support-login.html';
+        });
+    </script>
+</body>
+</html>

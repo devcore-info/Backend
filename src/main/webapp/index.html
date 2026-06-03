@@ -1,10 +1,50 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Start Page</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    </head>
-    <body>
-        <h1>Hello World!</h1>
-    </body>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connextion Helpdesk - Inicio</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container" style="max-width: 600px;">
+        <h1>Connextion Helpdesk 🚀</h1>
+        <p class="subtitle">Sistema Integral de Soporte y Gestión de Clientes</p>
+
+        <div class="landing-grid">
+            <!-- Client Portal Link Card -->
+            <div class="landing-card" onclick="alert('El portal de clientes está en desarrollo para la siguiente fase. Por ahora, utilice el portal administrativo.')">
+                <h3>Portal de Clientes</h3>
+                <p>Registra tus servicios suscritos, inicia sesión y crea tus reportes de averías o consultas técnicas.</p>
+                <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 500;">Próximamente →</span>
+            </div>
+
+            <!-- Support Portal Link Card -->
+            <div class="landing-card" onclick="window.location.href='support-login.html'">
+                <h3>Portal Administrativo</h3>
+                <p>Acceso exclusivo para técnicos de soporte y supervisores para gestionar casos y revisar métricas de servicio.</p>
+                <a id="supportBtnLink" href="support-login.html" class="btn" style="display: inline-block; text-align: center; text-decoration: none; margin-top: 10px;">Ingresar al Portal</a>
+            </div>
+        </div>
+
+        <div class="footer-text">
+            ¿Eres personal nuevo? <a href="support-register.html">Regístrate en la plataforma</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user has an active session
+            const userEmail = localStorage.getItem('userEmail');
+            if (userEmail) {
+                const btn = document.getElementById('supportBtnLink');
+                if (btn) {
+                    btn.innerText = 'Ir a mi Panel';
+                    btn.href = 'dashboard.html';
+                    btn.parentElement.setAttribute('onclick', "window.location.href='dashboard.html'");
+                }
+            }
+        });
+    </script>
+</body>
 </html>

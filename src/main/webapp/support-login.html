@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio de Sesión Soporte - Connextion Helpdesk</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Acceso Administrativo</h1>
+        <p class="subtitle">Personal Técnico y Supervisores</p>
+
+        <!-- Dynamic alert box -->
+        <div id="alertBox" class="alert"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Correo Institucional</label>
+                <input type="email" id="email" required placeholder="nombre@connextion.com">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" required placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn">Iniciar Sesión</button>
+        </form>
+
+        <p class="footer-text">
+            ¿No tienes cuenta? <a href="support-register.html">Regístrate aquí</a>
+        </p>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const alertBox = document.getElementById('alertBox');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Reset alerts
+            alertBox.style.display = 'none';
+            alertBox.className = 'alert';
+            alertBox.innerText = '';
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Prepare payload
+            const payload = {
+                email: email,
+                password: password
+            };
+
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Autenticando...';
+
+            try {
+                const response = await fetch('http://localhost:8080/Backend/resources/api/v1/support/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Success! Save userEmail and isSupervisor to localStorage as required
+                    localStorage.setItem('userEmail', data.email || email);
+                    localStorage.setItem('isSupervisor', data.isSupervisor !== undefined ? data.isSupervisor.toString() : 'false');
+                    
+                    // Show success
+                    showAlert('alert-success', 'Acceso concedido. Redirigiendo...');
+
+                    // Redirect to dashboard after a short delay so the user sees the success state
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1200);
+                } else {
+                    // Error response (e.g., 401 Unauthorized)
+                    showAlert('alert-error', data.error || 'Credenciales inválidas. Por favor verifique e intente de nuevo.');
+                }
+            } catch (err) {
+                console.error('Fetch error:', err);
+                showAlert('alert-error', 'Error de conexión con el servidor. Asegúrese de que el backend esté en ejecución.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Iniciar Sesión';
+            }
+        });
+
+        function showAlert(typeClass, message) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.className = `alert ${typeClass}`;
+            alertBox.innerText = message;
+            alertBox.style.display = 'flex';
+        }
+    </script>
+</body>
+</html>

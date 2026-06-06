@@ -1,15 +1,20 @@
 package com.connextion.helpdesk.repositories;
 
 import com.connextion.helpdesk.models.Client;
-import com.connextion.helpdesk.util.DbConnection;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+@Repository
 public class ClientRepository {
+
+    @Autowired
+    private DataSource dataSource;
 
     public boolean register(Client client) throws SQLException {
         String insertClientSql = "INSERT INTO Clients (name, first_surname, second_surname, email, password, address, phone, second_contact) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -21,7 +26,7 @@ public class ClientRepository {
         ResultSet rs = null;
 
         try {
-            conn = DbConnection.getConnection();
+            conn = dataSource.getConnection();
             conn.setAutoCommit(false); // Start transaction
 
             stmtClient = conn.prepareStatement(insertClientSql, Statement.RETURN_GENERATED_KEYS);
@@ -49,7 +54,7 @@ public class ClientRepository {
                 return false;
             }
 
-            // Insert many-to-many services
+            // Insert services
             if (client.getServices() != null && !client.getServices().isEmpty()) {
                 stmtService = conn.prepareStatement(insertServiceSql);
                 for (Integer serviceId : client.getServices()) {
@@ -84,7 +89,7 @@ public class ClientRepository {
     public Client login(String email, String password) throws SQLException {
         String query = "SELECT id, name, first_surname, second_surname, email, address, phone, second_contact FROM Clients WHERE email = ? AND password = ?";
         
-        try (Connection conn = DbConnection.getConnection();
+        try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             
             stmt.setString(1, email);

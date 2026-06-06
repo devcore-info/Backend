@@ -1,88 +1,76 @@
 package com.connextion.helpdesk.controllers;
 
 import com.connextion.helpdesk.models.SupportUser;
-import com.connextion.helpdesk.repositories.SupportUserRepository;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import com.connextion.helpdesk.services.SupportUserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-@Path("/api/v1/support")
+@RestController
+@RequestMapping("/api/v1/support")
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class SupportController {
 
-    private final SupportUserRepository supportUserRepository = new SupportUserRepository();
+    @Autowired
+    private SupportUserService supportUserService;
 
     // CU7: Register Support User (Supporter or Supervisor)
-    @POST
-    @Path("/register")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response registerSupportUser(SupportUser user) {
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, String>> registerSupportUser(@RequestBody SupportUser user) {
         Map<String, String> response = new HashMap<>();
-
-        // Business Rule Validations
-        if (user == null || user.getName() == null || user.getFirstSurname() == null || 
-            user.getSecondSurname() == null || user.getEmail() == null || 
-            user.getPassword() == null || user.getServices() == null || user.getServices().isEmpty()) {
-            
-            response.put("error", "Missing required fields or services");
-            return Response.status(Response.Status.BAD_REQUEST).entity(response).build();
-        }
-
         try {
-            boolean success = supportUserRepository.register(user);
+            boolean success = supportUserService.registerSupportUser(user);
             if (success) {
                 response.put("message", "Support user registered successfully");
-                return Response.status(Response.Status.CREATED).entity(response).build();
+                return new ResponseEntity<>(response, HttpStatus.CREATED);
             } else {
                 response.put("error", "Failed to register support user");
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(response).build();
+                return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
             }
+        } catch (IllegalArgumentException e) {
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         } catch (SQLException e) {
             response.put("error", "Database error: " + e.getMessage());
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(response).build();
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // CU8: Support / Supervisor Login
-    @POST
-    @Path("/login")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response loginSupportUser(Map<String, String> credentials) {
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> loginSupportUser(@RequestBody Map<String, String> credentials) {
         Map<String, Object> response = new HashMap<>();
-        
         if (credentials == null) {
             response.put("error", "Email and password are required");
-            return Response.status(Response.Status.BAD_REQUEST).entity(response).build();
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
         
         String email = credentials.get("email");
         String password = credentials.get("password");
 
-        if (email == null || password == null) {
-            response.put("error", "Email and password are required");
-            return Response.status(Response.Status.BAD_REQUEST).entity(response).build();
-        }
-
         try {
-            SupportUser authenticatedUser = supportUserRepository.login(email, password);
+            SupportUser authenticatedUser = supportUserService.loginSupportUser(email, password);
             if (authenticatedUser != null) {
                 response.put("message", "Authentication successful");
                 response.put("email", authenticatedUser.getEmail());
                 response.put("isSupervisor", authenticatedUser.getIsSupervisor());
                 response.put("supportUserId", authenticatedUser.getId());
                 response.put("name", authenticatedUser.getName());
-                return Response.ok(response).build();
+                return new ResponseEntity<>(response, HttpStatus.OK);
             } else {
                 response.put("error", "Invalid email/password or user has no services assigned");
-                return Response.status(Response.Status.UNAUTHORIZED).entity(response).build();
+                return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
             }
+        } catch (IllegalArgumentException e) {
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         } catch (SQLException e) {
             response.put("error", "Database error: " + e.getMessage());
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(response).build();
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

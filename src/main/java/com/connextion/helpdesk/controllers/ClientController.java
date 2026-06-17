@@ -72,4 +72,16 @@ public class ClientController {
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/{clientId}/services")
+    public ResponseEntity<Object> getClientServices(@PathVariable int clientId) {
+        try {
+            java.util.List<java.util.Map<String, Object>> services = clientService.getClientServices(clientId);
+            return new ResponseEntity<>(services, HttpStatus.OK);
+        } catch (SQLException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "Database error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

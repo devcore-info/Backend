@@ -27,4 +27,8 @@ public class ClientService {
         }
         return clientRepository.login(email, password);
     }
+
+    public java.util.List<java.util.Map<String, Object>> getClientServices(int clientId) throws SQLException {
+        return clientRepository.getClientServices(clientId);
+    }
 }

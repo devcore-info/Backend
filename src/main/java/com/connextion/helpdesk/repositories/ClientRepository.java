@@ -112,4 +112,22 @@ public class ClientRepository {
         }
         return null;
     }
+
+    public java.util.List<java.util.Map<String, Object>> getClientServices(int clientId) throws SQLException {
+        java.util.List<java.util.Map<String, Object>> list = new java.util.ArrayList<>();
+        String query = "SELECT s.id, s.name FROM Client_Services cs INNER JOIN Services s ON cs.service_id = s.id WHERE cs.client_id = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, clientId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("id", rs.getInt("id"));
+                    map.put("name", rs.getString("name"));
+                    list.add(map);
+                }
+            }
+        }
+        return list;
+    }
 }

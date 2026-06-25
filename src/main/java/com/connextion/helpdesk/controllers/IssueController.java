@@ -3,6 +3,7 @@ package com.connextion.helpdesk.controllers;
 import com.connextion.helpdesk.models.Comment;
 import com.connextion.helpdesk.models.Issue;
 import com.connextion.helpdesk.models.Note;
+import com.connextion.helpdesk.models.Bitacora;
 import com.connextion.helpdesk.services.IssueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -198,6 +199,23 @@ public class IssueController {
             response.put("error", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         } catch (SQLException e) {
+            response.put("error", "Database error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Get Bitacora Audit logs (Supervisor / Support view)
+    @GetMapping("/{id}/bitacora")
+    public ResponseEntity<Object> getBitacora(@PathVariable int id) {
+        try {
+            List<Bitacora> list = issueService.getBitacora(id);
+            return new ResponseEntity<>(list, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        } catch (SQLException e) {
+            Map<String, String> response = new HashMap<>();
             response.put("error", "Database error: " + e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }

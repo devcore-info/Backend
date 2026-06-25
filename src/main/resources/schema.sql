@@ -1,4 +1,5 @@
 -- Drop foreign keys and tables if they exist to allow clean initialization
+IF OBJECT_ID('dbo.Bitacora', 'U') IS NOT NULL DROP TABLE dbo.Bitacora;
 IF OBJECT_ID('dbo.Notes', 'U') IS NOT NULL DROP TABLE dbo.Notes;
 IF OBJECT_ID('dbo.Comments', 'U') IS NOT NULL DROP TABLE dbo.Comments;
 IF OBJECT_ID('dbo.Issues', 'U') IS NOT NULL DROP TABLE dbo.Issues;
@@ -95,4 +96,15 @@ CREATE TABLE Notes (
     support_user_id INT NOT NULL,
     FOREIGN KEY (issue_id) REFERENCES Issues(id) ON DELETE CASCADE,
     FOREIGN KEY (support_user_id) REFERENCES Support_Users(id) ON DELETE CASCADE
+);
+
+-- Create Bitacora table for audit logging
+CREATE TABLE Bitacora (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    issue_id INT NOT NULL,
+    changed_by VARCHAR(150) NOT NULL, -- Email of client/support or 'SYSTEM'
+    action_type VARCHAR(100) NOT NULL, -- 'CREACION', 'CLASIFICACION', 'ASIGNACION', 'CAMBIO_ESTADO', 'RESOLUCION', 'COMENTARIO', 'NOTA'
+    description VARCHAR(MAX) NOT NULL,
+    change_timestamp DATETIME NOT NULL DEFAULT GETDATE(),
+    FOREIGN KEY (issue_id) REFERENCES Issues(id) ON DELETE CASCADE
 );

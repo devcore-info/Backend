@@ -3,6 +3,7 @@ package com.connextion.helpdesk.repositories;
 import com.connextion.helpdesk.models.Comment;
 import com.connextion.helpdesk.models.Issue;
 import com.connextion.helpdesk.models.Note;
+import com.connextion.helpdesk.models.Bitacora;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import javax.sql.DataSource;
@@ -296,5 +297,86 @@ public class IssueRepository {
             stmt.setInt(3, id);
             return stmt.executeUpdate() > 0;
         }
+    }
+
+    // Bitacora methods for logging transitions
+    public boolean addBitacora(Bitacora entry) throws SQLException {
+        String query = "INSERT INTO Bitacora (issue_id, changed_by, action_type, description) VALUES (?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, entry.getIssueId());
+            stmt.setString(2, entry.getChangedBy());
+            stmt.setString(3, entry.getActionType());
+            stmt.setString(4, entry.getDescription());
+
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        entry.setId(rs.getInt(1));
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public List<Bitacora> getBitacoraByIssueId(int issueId) throws SQLException {
+        List<Bitacora> list = new ArrayList<>();
+        String query = "SELECT id, issue_id, changed_by, action_type, description, change_timestamp " +
+                       "FROM Bitacora WHERE issue_id = ? " +
+                       "ORDER BY change_timestamp ASC";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, issueId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Bitacora b = new Bitacora();
+                    b.setIssueId(rs.getInt("issue_id"));
+                    b.setChangedBy(rs.getString("changed_by"));
+                    b.setActionType(rs.getString("action_type"));
+                    b.setDescription(rs.getString("description"));
+                    b.setChangeTimestamp(rs.getTimestamp("change_timestamp"));
+                    list.add(b);
+                }
+            }
+        }
+        return list;
+    }
+
+    public boolean updateClassificationAndAssignee(int id, String classification, Integer supportUserId) throws SQLException {
+        String query = "UPDATE Issues SET classification = ?, support_user_assigned_id = ?, status = 'Asignado' WHERE id = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, classification);
+            if (supportUserId != null) {
+                stmt.setInt(2, supportUserId);
+            } else {
+                stmt.setNull(2, java.sql.Types.INTEGER);
+            }
+            stmt.setInt(3, id);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public Integer findBestSupporterForService(int serviceId) throws SQLException {
+        String query = "SELECT TOP 1 su.id " +
+                       "FROM Support_Users su " +
+                       "INNER JOIN Support_User_Services sus ON su.id = sus.support_user_id " +
+                       "LEFT JOIN Issues i ON su.id = i.support_user_assigned_id AND i.status != 'Resuelto' " +
+                       "WHERE sus.service_id = ? AND su.is_supervisor = 0 " +
+                       "GROUP BY su.id " +
+                       "ORDER BY COUNT(i.id) ASC";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, serviceId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return null;
     }
 }

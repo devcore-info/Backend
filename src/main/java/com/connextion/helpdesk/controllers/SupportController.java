@@ -73,4 +73,16 @@ public class SupportController {
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/technicians")
+    public ResponseEntity<Object> getAllTechnicians() {
+        try {
+            java.util.List<SupportUser> technicians = supportUserService.getAllTechnicians();
+            return new ResponseEntity<>(technicians, HttpStatus.OK);
+        } catch (SQLException e) {
+            Map<String, String> response = new java.util.HashMap<>();
+            response.put("error", "Database error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

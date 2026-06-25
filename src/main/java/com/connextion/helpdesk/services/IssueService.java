@@ -88,4 +88,26 @@ public class IssueService {
         }
         return issueRepository.getNotesByIssueId(issueId);
     }
+
+    public boolean assignTicket(int id, int supportUserId) throws SQLException, IllegalArgumentException {
+        if (id <= 0 || supportUserId <= 0) {
+            throw new IllegalArgumentException("Invalid ticket ID or support user ID");
+        }
+        return issueRepository.assignSupportUser(id, supportUserId);
+    }
+
+    public boolean updateTicketStatus(int id, String status, String resolutionComment) throws SQLException, IllegalArgumentException {
+        if (id <= 0 || status == null || status.trim().isEmpty()) {
+            throw new IllegalArgumentException("Ticket ID and status are required");
+        }
+        return issueRepository.updateStatus(id, status, resolutionComment);
+    }
+
+    public boolean addNote(Note note) throws SQLException, IllegalArgumentException {
+        if (note == null || note.getDescription() == null || note.getDescription().trim().isEmpty() ||
+            note.getIssueId() <= 0 || note.getSupportUserId() <= 0) {
+            throw new IllegalArgumentException("Description, ticket ID, and support user ID are required");
+        }
+        return issueRepository.addNote(note);
+    }
 }

@@ -112,4 +112,25 @@ public class SupportUserRepository {
         }
         return null;
     }
+
+    public java.util.List<SupportUser> getAllTechnicians() throws SQLException {
+        java.util.List<SupportUser> list = new java.util.ArrayList<>();
+        String query = "SELECT id, name, first_surname, second_surname, email, is_supervisor FROM Support_Users WHERE is_supervisor = 0";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                SupportUser user = new SupportUser();
+                user.setId(rs.getInt("id"));
+                user.setName(rs.getString("name"));
+                user.setFirstSurname(rs.getString("first_surname"));
+                user.setSecondSurname(rs.getString("second_surname"));
+                user.setEmail(rs.getString("email"));
+                user.setIsSupervisor(rs.getBoolean("is_supervisor"));
+                list.add(user);
+            }
+        }
+        return list;
+    }
 }
+

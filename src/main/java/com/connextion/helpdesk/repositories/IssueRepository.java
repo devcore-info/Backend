@@ -276,4 +276,25 @@ public class IssueRepository {
         }
         return list;
     }
+
+    public boolean assignSupportUser(int id, int supportUserId) throws SQLException {
+        String query = "UPDATE Issues SET support_user_assigned_id = ?, status = CASE WHEN status = 'Ingresado' THEN 'Asignado' ELSE status END WHERE id = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, supportUserId);
+            stmt.setInt(2, id);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public boolean updateStatus(int id, String status, String resolutionComment) throws SQLException {
+        String query = "UPDATE Issues SET status = ?, resolution_comment = ? WHERE id = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, status);
+            stmt.setString(2, resolutionComment);
+            stmt.setInt(3, id);
+            return stmt.executeUpdate() > 0;
+        }
+    }
 }

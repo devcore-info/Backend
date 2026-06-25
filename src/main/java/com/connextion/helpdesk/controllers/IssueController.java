@@ -123,4 +123,83 @@ public class IssueController {
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    // Assign Ticket to support user
+    @PutMapping("/{id}/assign")
+    public ResponseEntity<Map<String, String>> assignTicket(@PathVariable int id, @RequestBody Map<String, Integer> payload) {
+        Map<String, String> response = new HashMap<>();
+        if (payload == null || !payload.containsKey("supportUserId")) {
+            response.put("error", "supportUserId is required");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+        int supportUserId = payload.get("supportUserId");
+        try {
+            boolean success = issueService.assignTicket(id, supportUserId);
+            if (success) {
+                response.put("message", "Ticket assigned successfully");
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            } else {
+                response.put("error", "Failed to assign ticket");
+                return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (IllegalArgumentException e) {
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        } catch (SQLException e) {
+            response.put("error", "Database error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Update Ticket Status
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Map<String, String>> updateTicketStatus(@PathVariable int id, @RequestBody Map<String, String> payload) {
+        Map<String, String> response = new HashMap<>();
+        if (payload == null || !payload.containsKey("status")) {
+            response.put("error", "status is required");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+        String status = payload.get("status");
+        String resolutionComment = payload.get("resolutionComment");
+        try {
+            boolean success = issueService.updateTicketStatus(id, status, resolutionComment);
+            if (success) {
+                response.put("message", "Ticket status updated successfully");
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            } else {
+                response.put("error", "Failed to update ticket status");
+                return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (IllegalArgumentException e) {
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        } catch (SQLException e) {
+            response.put("error", "Database error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Add Note to Ticket (CU13)
+    @PostMapping("/{id}/notes")
+    public ResponseEntity<Map<String, Object>> addNote(@PathVariable int id, @RequestBody Note note) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            note.setIssueId(id);
+            boolean success = issueService.addNote(note);
+            if (success) {
+                response.put("message", "Note added successfully");
+                response.put("noteId", note.getId());
+                return new ResponseEntity<>(response, HttpStatus.CREATED);
+            } else {
+                response.put("error", "Failed to add note");
+                return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (IllegalArgumentException e) {
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        } catch (SQLException e) {
+            response.put("error", "Database error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

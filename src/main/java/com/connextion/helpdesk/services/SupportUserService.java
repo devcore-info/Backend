@@ -27,4 +27,8 @@ public class SupportUserService {
         }
         return supportUserRepository.login(email, password);
     }
+
+    public java.util.List<SupportUser> getAllTechnicians() throws SQLException {
+        return supportUserRepository.getAllTechnicians();
+    }
 }

@@ -36,8 +36,7 @@ public class HelpDeskSeleniumTests {
         options.addArguments("--window-size=1920,1080");
 
         driver = new ChromeDriver(options);
-        // JUnit/Selenium 3 uses WebDriverWait constructor: (driver, timeoutInSeconds)
-        wait = new WebDriverWait(driver, 10);
+        wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(10));
     }
 
     @AfterEach

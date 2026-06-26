@@ -124,14 +124,22 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         if (uri == null) return null;
         String path = uri.getPath();
         String[] parts = path.split("/");
-        // Map path: /chat-socket/{ticketId}/{userType}/{userId}
-        // parts[0] = ""
-        // parts[1] = "chat-socket"
-        // parts[2] = {ticketId}
-        // parts[3] = {userType}
-        // parts[4] = {userId}
-        if (parts.length >= 5) {
-            return new String[]{parts[2], parts[3], parts[4]};
+        
+        // Find "chat-socket" in the path segments to handle any prefix context path (like /Backend)
+        int chatSocketIdx = -1;
+        for (int i = 0; i < parts.length; i++) {
+            if ("chat-socket".equals(parts[i])) {
+                chatSocketIdx = i;
+                break;
+            }
+        }
+        
+        if (chatSocketIdx != -1 && parts.length > chatSocketIdx + 3) {
+            return new String[]{
+                parts[chatSocketIdx + 1], // ticketId
+                parts[chatSocketIdx + 2], // userType (CLIENT/SUPPORT)
+                parts[chatSocketIdx + 3]  // userId
+            };
         }
         return null;
     }

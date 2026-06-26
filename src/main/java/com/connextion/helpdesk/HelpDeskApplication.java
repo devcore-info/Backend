@@ -28,8 +28,6 @@ public class HelpDeskApplication extends SpringBootServletInitializer {
         if (password == null || password.trim().isEmpty()) {
             password = "16200122Wqkj!";
         }
-        String url = "jdbc:sqlserver://" + dbHost + ":1433;databaseName=master;trustServerCertificate=true;loginTimeout=10";
-        String user = "sa";
 
         System.out.println("[DB-INIT] Ensuring ConnextionDB exists on " + dbHost + "...");
         
@@ -40,8 +38,16 @@ public class HelpDeskApplication extends SpringBootServletInitializer {
             java.sql.Connection conn = null;
             java.sql.Statement stmt = null;
             try {
-                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-                conn = java.sql.DriverManager.getConnection(url, user, password);
+                com.microsoft.sqlserver.jdbc.SQLServerDataSource ds = new com.microsoft.sqlserver.jdbc.SQLServerDataSource();
+                ds.setServerName(dbHost);
+                ds.setPortNumber(1433);
+                ds.setDatabaseName("master");
+                ds.setUser("sa");
+                ds.setPassword(password);
+                ds.setTrustServerCertificate(true);
+                ds.setLoginTimeout(10);
+                
+                conn = ds.getConnection();
                 stmt = conn.createStatement();
                 
                 java.sql.ResultSet rs = stmt.executeQuery("SELECT database_id FROM sys.databases WHERE name = 'ConnextionDB'");
